@@ -6,6 +6,8 @@ import java.util.List;
 import org.junit.Test;
 
 import dao.UserPosDAO;
+import model.BeanUserNome;
+import model.Telefone;
 import model.Userposjava;
 
 public class TesteBancoJdbc {
@@ -15,7 +17,6 @@ public class TesteBancoJdbc {
 		UserPosDAO userPosDAO = new UserPosDAO();
 		Userposjava userposjava = new Userposjava();
 
-		userposjava.setId(6L);
 		userposjava.setNome("Julia");
 		userposjava.setEmail("juliafernandez@yahoo.com");
 
@@ -58,13 +59,63 @@ public class TesteBancoJdbc {
 
 		try {
 			UserPosDAO userDao = new UserPosDAO();
-			
+
 			Userposjava objetoBanco = userDao.buscar(3L);
 			objetoBanco.setNome("Cleito");
-			
+
 			userDao.atualizar(objetoBanco);
-			
+
 		} catch (SQLException e) {
+			e.printStackTrace();
+		}
+	}
+
+	@Test
+	public void initDeletar() {
+
+		try {
+
+			UserPosDAO dao = new UserPosDAO();
+			dao.deletar(6L);
+
+		} catch (Exception e) {
+			e.printStackTrace();
+		}
+
+	}
+
+	@Test
+	public void testeInsertTelefone() {
+		UserPosDAO dao = new UserPosDAO();
+		Telefone telefone = new Telefone();
+
+		telefone.setIdUsuario(5L);
+		telefone.setNumero("(34) 3432-1124");
+		telefone.setTipo("Telefone");
+
+		dao.salvarTelefone(telefone);
+	}
+
+	@Test
+	public void buscaTelefone() {
+		UserPosDAO dao = new UserPosDAO();
+
+		List<BeanUserNome> beanUserNomes = dao.buscaUserFone(5L);
+		for (BeanUserNome beanUserNome : beanUserNomes) {
+			System.out.println(beanUserNome);
+		}
+
+	}
+
+	@Test
+	public void deleteUsuarioFone() {
+
+		try {
+			
+			UserPosDAO dao = new UserPosDAO();
+			dao.deleteFonesPorUsuario(8L);
+
+		} catch (Exception e) {
 			e.printStackTrace();
 		}
 

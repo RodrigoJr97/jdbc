@@ -8,6 +8,8 @@ import java.util.ArrayList;
 import java.util.List;
 
 import conexaojdbc.SingleConnection;
+import model.BeanUserNome;
+import model.Telefone;
 import model.Userposjava;
 
 // Faz as operações no banco de dados
@@ -16,7 +18,8 @@ public class UserPosDAO {
 	// Estabelece nossa conexão com o banco
 	private Connection connection;
 
-	// Quando instanciar um obj UserPosDAO vai injetar uma SingleConnection para dentro do
+	// Quando instanciar um obj UserPosDAO vai injetar uma SingleConnection para
+	// dentro do
 	// connection
 	public UserPosDAO() {
 		connection = SingleConnection.getConnection();
@@ -25,15 +28,14 @@ public class UserPosDAO {
 	public void salvar(Userposjava userposjava) {
 
 		try {
-			String sql = "insert into userposjava(id, nome, email) values(?, ?, ?)";
+			String sql = "insert into userposjava(nome, email) values(?, ?)";
 
 			// Prepara o sql
 			PreparedStatement insert = connection.prepareStatement(sql);
 
-			// Passamos posição do parametro que vamos adicionar no caso id depois o valor
-			insert.setLong(1, userposjava.getId());
-			insert.setString(2, userposjava.getNome());
-			insert.setString(3, userposjava.getEmail());
+			// Passamos posição do parametro da sql que vamos adicionar depois o valor
+			insert.setString(1, userposjava.getNome());
+			insert.setString(2, userposjava.getEmail());
 			insert.execute();
 
 			// Salva no banco
@@ -47,6 +49,33 @@ public class UserPosDAO {
 			} catch (SQLException e1) {
 				e1.printStackTrace();
 			}
+			e.printStackTrace();
+		}
+
+	}
+
+	public void salvarTelefone(Telefone telefone) {
+
+		try {
+
+			String sql = "INSERT INTO telefoneuser(numero, tipo, usuariopessoa) VALUES (?, ?, ?);";
+
+			PreparedStatement insert = connection.prepareStatement(sql);
+			insert.setString(1, telefone.getNumero());
+			insert.setString(2, telefone.getTipo());
+			insert.setLong(3, telefone.getIdUsuario());
+			insert.execute();
+
+			connection.commit();
+
+		} catch (Exception e) {
+
+			try {
+				connection.rollback();
+			} catch (SQLException e1) {
+				e1.printStackTrace();
+			}
+
 			e.printStackTrace();
 		}
 
@@ -98,14 +127,45 @@ public class UserPosDAO {
 			retorno.setEmail(resultado.getString("email"));
 
 		}
-
 		return retorno;
+	}
+
+	public List<BeanUserNome> buscaUserFone(Long idUser) {
+
+		List<BeanUserNome> beanUserNomes = new ArrayList<BeanUserNome>();
+
+		String sql = "SELECT userp.nome, fone.numero, userp.email FROM telefoneuser AS fone "
+				+ " INNER JOIN userposjava AS userp ON fone.usuariopessoa = userp.id " 
+				+ " WHERE userp.id = " + idUser;
+
+		try {
+
+			PreparedStatement statement = connection.prepareStatement(sql);
+
+			// Traz o resultado da busca no banco
+			ResultSet resultado = statement.executeQuery();
+
+			while (resultado.next()) {
+				BeanUserNome userFone = new BeanUserNome();
+
+				userFone.setNome(resultado.getString("nome"));
+				userFone.setNumero(resultado.getString("numero"));
+				userFone.setEmail(resultado.getString("email"));
+
+				beanUserNomes.add(userFone);
+			}
+
+		} catch (Exception e) {
+			e.printStackTrace();
+		}
+
+		return beanUserNomes;
 	}
 
 	public void atualizar(Userposjava userposjava) {
 
 		try {
-			
+
 			String sql = "update userposjava set nome = ? where id = " + userposjava.getId();
 
 			PreparedStatement statement = connection.prepareStatement(sql);
@@ -125,6 +185,56 @@ public class UserPosDAO {
 			}
 
 			e.printStackTrace();
+		}
+
+	}
+
+	public void deletar(Long id) {
+
+		try {
+
+			String sql = "delete from userposjava where id = " + id;
+
+			PreparedStatement statement = connection.prepareStatement(sql);
+			statement.execute();
+
+			connection.commit();
+
+		} catch (Exception e) {
+
+			try {
+				connection.rollback();
+			} catch (SQLException e1) {
+				e1.printStackTrace();
+			}
+			e.printStackTrace();
+		}
+
+	}
+
+	public void deleteFonesPorUsuario(Long idUsuario) {
+
+		try {
+
+			String sqlFone = "delete from telefoneuser where usuariopessoa = " + idUsuario;
+			String sqlUsuario = "delete from userposjava where id = " + idUsuario;
+
+			PreparedStatement statement = connection.prepareStatement(sqlFone);
+			statement.executeUpdate();
+			connection.commit();
+			
+			statement = connection.prepareStatement(sqlUsuario);
+			statement.executeUpdate();
+			connection.commit();
+
+		} catch (Exception e) {
+			e.printStackTrace();
+
+			try {
+				connection.rollback();
+			} catch (SQLException e1) {
+				e1.printStackTrace();
+			}
 		}
 
 	}
